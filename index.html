@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      class Node {
+        constructor(data = null, left = null, right = null) {
+          this.data = data;
+          this.left = left;
+          this.right = right;
+          if (left !== null && right !== null) {
+            this.left = buildTree(left);
+            this.right = buildTree(right);
+          }
+        }
+      }
+
+      class Tree {
+        constructor(arr) {
+          this.root = buildTree(arr);
+        }
+
+        rebalance() {
+          let nodeChain = [];
+          (function inner(node) {
+            if (node === null) return;
+            nodeChain.push(node);
+            inner(node.left);
+            inner(node.right);
+          })(this.root);
+          let values = nodeChain.map((node) => node.data);
+
+          this.root = new Tree(values).root;
+        }
+
+        isBalanced() {
+          let nodeChain = [];
+          (function inner(node) {
+            if (node === null) return;
+            nodeChain.push(node);
+            inner(node.left);
+            inner(node.right);
+          })(this.root);
+          let values = nodeChain.map((node) => node.data);
+          return new Tree(values).root.data === this.root.data;
+        }
+
+        height(node) {
+          let result = [];
+          let queue = [node];
+          (function inner() {
+            let curQueue = [];
+            queue.forEach((node) => {
+              result.push(node);
+              if (node.left !== null) {
+                curQueue.push(node.left);
+              }
+              if (node.right !== null) {
+                curQueue.push(node.right);
+              }
+              queue = curQueue;
+              return;
+            });
+            if (curQueue.length === 0) return;
+            inner();
+          })();
+
+          return (function searchValue(node, value) {
+            let nodeChain = [];
+            (function inner(node, value) {
+              nodeChain.push(node);
+              if (node === null) return;
+              if (node.data > value) return inner(node.left, value);
+              if (node.data < value) return inner(node.right, value);
+            })(node, value);
+            return nodeChain;
+          })(node, result[result.length - 1].data).length;
+        }
+        depth(node) {
+          console.log(node);
+          let nodeChain = [];
+          (function inner(node, value) {
+            nodeChain.push(node);
+            if (node === null) return;
+            if (node.data > value) return inner(node.left, value);
+            if (node.data < value) return inner(node.right, value);
+          })(this.root, node.data);
+          return nodeChain.length - 1;
+        }
+
+        levelOrder(callback) {
+          let result = [];
+          let queue = [this.root];
+          (function inner() {
+            let curQueue = [];
+            queue.forEach((node) => {
+              result.push(node);
+              if (node.left !== null) {
+                curQueue.push(node.left);
+              }
+              if (node.right !== null) {
+                curQueue.push(node.right);
+              }
+              queue = curQueue;
+              return;
+            });
+            if (curQueue.length === 0) return;
+            inner();
+          })();
+
+          if (!callback) {
+            return result;
+          }
+          result.forEach((node) => callback(node));
+        }
+
+        preOrder(callback) {
+          let nodeChain = [];
+          (function inner(node) {
+            if (node === null) return;
+            nodeChain.push(node);
+            inner(node.left);
+            inner(node.right);
+          })(this.root);
+
+          if (!callback) {
+            return nodeChain;
+          }
+          nodeChain.forEach((node) => callback(node));
+        }
+
+        inOrder(callback) {
+          let nodeChain = [];
+          (function inner(node) {
+            if (node === null) return;
+            inner(node.left);
+            nodeChain.push(node);
+            inner(node.right);
+            if (!node.left && !node.right) return;
+          })(this.root);
+          if (!callback) {
+            return nodeChain;
+          }
+          nodeChain.forEach((node) => callback(node));
+        }
+
+        postOrder(callback) {
+          let nodeChain = [];
+          (function inner(node) {
+            if (node === null) return;
+            inner(node.left);
+            inner(node.right);
+            nodeChain.push(node);
+          })(this.root);
+
+          if (!callback) {
+            return nodeChain;
+          }
+          nodeChain.forEach((node) => callback(node));
+        }
+
+        find(value) {
+          let node = this.root;
+          return (function inner(node, value) {
+            if (node === null) return;
+            if (node.data === value) return node;
+            if (node.data > value) return inner(node.left, value);
+            if (node.data < value) return inner(node.right, value);
+          })(node, value);
+        }
+
+        delete(value) {
+          function searchValue(node, value) {
+            let nodeChain = [];
+            (function inner(node, value) {
+              nodeChain.push(node);
+              if (node === null) return;
+
+              if (node.data > value) return inner(node.left, value);
+              if (node.data < value) return inner(node.right, value);
+            })(node, value);
+
+            return nodeChain;
+          }
+          function searchAllValues(node) {
+            let allNodesChain = [];
+            (function inner(node) {
+              allNodesChain.push(node);
+              if (node === null) return;
+              inner(node.left);
+              inner(node.right);
+            })(node);
+            return allNodesChain.filter((node) => node !== null);
+          }
+          function testWhichCaseAndReplaceForRoot(obj) {
+            if (obj.root.left === null && obj.root.right === null) {
+              obj.root = null;
+            }
+            if (obj.root.left !== null && obj.root.right === null) {
+              obj.root = obj.root.left;
+              return;
+            }
+            if (obj.root.left === null && obj.root.right !== null) {
+              obj.root = obj.root.right;
+              return;
+            }
+
+            if (obj.root.left && obj.root.right) {
+              let allChildren = searchAllValues(obj.root.right);
+              let smallest = { data: Infinity };
+              allChildren.forEach((node) => {
+                if (node.data < smallest.data) {
+                  smallest = node;
+                }
+              });
+
+              let nodeChainToReplacement = searchValue(obj.root, smallest.data);
+
+              let parentOfSmallest =
+                nodeChainToReplacement[nodeChainToReplacement.length - 2];
+
+              if (nodeChainToReplacement.length > 1) {
+                if (parentOfSmallest.left === smallest)
+                  parentOfSmallest.left = smallest.right;
+                if (parentOfSmallest.right === smallest)
+                  parentOfSmallest.right = smallest.right;
+              }
+
+              smallest.right = obj.root.right;
+              smallest.left = obj.root.left;
+              obj.root = smallest;
+            }
+          }
+          function testWhichCaseAndReplace(parent, child, dir) {
+            if (parent[dir] !== null && parent[dir].data === value) {
+              if (child.left === null && child.right === null) {
+                parent[dir] = null;
+                return;
+              }
+
+              if (child.left !== null && child.right === null) {
+                parent[dir] = child.left;
+                return;
+              }
+              if (child.left === null && child.right !== null) {
+                parent[dir] = child.right;
+                return;
+              }
+
+              if (child.left && child.right) {
+                let allChildren = searchAllValues(child.right);
+                let smallest = { data: Infinity };
+                allChildren.forEach((node) => {
+                  if (node.data < smallest.data) {
+                    smallest = node;
+                  }
+                });
+
+                let nodeChainToReplacement = searchValue(child, smallest.data);
+
+                let parentOfSmallest =
+                  nodeChainToReplacement[nodeChainToReplacement.length - 2];
+
+                if (nodeChainToReplacement.length > 1) {
+                  if (parentOfSmallest.left === smallest)
+                    nodeChainToReplacement[
+                      nodeChainToReplacement.length - 2
+                    ].left = smallest.right;
+                  if (parentOfSmallest.right === smallest)
+                    nodeChainToReplacement[
+                      nodeChainToReplacement.length - 2
+                    ].right = smallest.right;
+                }
+
+                smallest.right = child.right;
+                smallest.left = child.left;
+                parent[dir] = smallest;
+              }
+            }
+          }
+
+          let nodeChain = searchValue(this.root, value);
+
+          if (nodeChain.length < 1 || value === undefined) {
+            return;
+          }
+
+          if (nodeChain.length < 2) {
+            testWhichCaseAndReplaceForRoot(this);
+            return;
+          }
+
+          testWhichCaseAndReplace(
+            nodeChain[nodeChain.length - 2],
+            nodeChain[nodeChain.length - 1],
+            "right"
+          );
+          testWhichCaseAndReplace(
+            nodeChain[nodeChain.length - 2],
+            nodeChain[nodeChain.length - 1],
+            "left"
+          );
+        }
+
+        insert(value) {
+          function searchAndInsert(node) {
+            if (node.data < value) {
+              if (node.right === null) {
+                node.right = new Node(value);
+                return;
+              }
+              return searchAndInsert(node.right);
+            }
+            if (node.data > value) {
+              if (node.left === null) {
+                node.left = new Node(value);
+                return;
+              }
+              return searchAndInsert(node.left);
+            }
+          }
+          searchAndInsert(this.root);
+        }
+      }
+
+      let arr = [];
+
+      for (let i = 0; i < 20; i += 2) {
+        arr.push(i);
+      }
+
+      let tree = new Tree(arr);
+
+      prettyPrint(tree.root);
+
+      function buildTree(arr) {
+        let tree = [];
+        let set = new Set(arr.sort((num1, num2) => num1 > num2));
+        set.forEach((value, index) => tree.push(value));
+
+        let root = tree[Math.ceil(tree.length / 2) - 1];
+        let left = tree.slice(0, Math.ceil(tree.length / 2) - 1);
+        let right = tree.slice(Math.ceil(tree.length / 2));
+
+        if (tree.length < 1) return null;
+        if (tree.length < 2) return new Node(tree[0]);
+
+        return new Node(root, left, right);
+      }
+
+      function prettyPrint(node, prefix = "", isLeft = true) {
+        if (node === null) {
+          return;
+        }
+        if (node.right !== null) {
+          prettyPrint(
+            node.right,
+            `${prefix}${isLeft ? "│   " : "    "}`,
+            false
+          );
+        }
+        console.log(`${prefix}${isLeft ? "└── " : "┌── "}${node.data}`);
+        if (node.left !== null) {
+          prettyPrint(node.left, `${prefix}${isLeft ? "    " : "│   "}`, true);
+        }
+      }
+    </script>
+  </body>
+</html>
